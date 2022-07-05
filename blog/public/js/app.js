@@ -37338,7 +37338,48 @@ $('.addBtn').on('click', function () {
     var FileSize = (MyFile[0].size / (1024 * 1024)).toFixed(2);
     $(this).closest('tr').find('.fileSize').html(FileSize + "MB");
   });
+  $('.upBtn').on('click', function (event) {
+    var MyFile = $(this).closest('tr').find('.fileInput').prop('files');
+    var fileUpMB = $(this).closest('tr').find('.fileUpMB');
+    var fileUpPercentage = $(this).closest('tr').find('.fileUpPercentage');
+    var fileStatus = $(this).closest('tr').find('.fileStatus');
+    var Upbtn = $(this);
+    var fromData = new FormData();
+    fromData.append('FileKey', MyFile[0]);
+    OnFileUpload(fromData, fileUpMB, fileUpPercentage, fileStatus, Upbtn);
+    event.preventDefault();
+    event.stopImmediatePropagation();
+  });
 });
+
+function OnFileUpload(fromData, fileUpMB, fileUpPercentage, fileStatus, Upbtn) {
+  fileStatus.html("Uploading...");
+  Upbtn.prop('disabled', true);
+  var url = '/fileUp';
+  var config = {
+    headers: {
+      'content-type': 'multipart/form-data'
+    },
+    onUploadProgress: function onUploadProgress(progressEvent) {
+      var UpMB = (progressEvent.loaded / (1024 * 1024)).toFixed(2) + " MB";
+      var UpPer = (progressEvent.loaded * 100 / progressEvent.total).toFixed(2) + " %";
+      fileUpMB.html(UpMB);
+      fileUpPercentage.html(UpPer);
+    }
+  };
+  axios.post(url, fromData, config).then(function (response) {
+    if (response.status == 200) {
+      fileStatus.html('Success');
+      Upbtn.prop('disabled', false);
+    } else {
+      fileStatus.html('Fail');
+      Upbtn.prop('disabled', false);
+    }
+  })["catch"](function (error) {
+    fileStatus.html('Fail');
+    Upbtn.prop('disabled', false);
+  });
+}
 
 /***/ }),
 
